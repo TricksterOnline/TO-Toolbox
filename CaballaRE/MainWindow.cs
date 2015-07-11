@@ -5,9 +5,10 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
 using System.IO;
+using System.Drawing.Imaging;
 
 namespace CaballaRE
 {
@@ -21,24 +22,44 @@ namespace CaballaRE
         private NRILoader nril = new NRILoader();
         private DatLoader dl = new DatLoader();
 
+        // Open NRI
         private void button1_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "NRI files (*.nri;*.bac)|*.nri;*.bac|All files|*.*";
             if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                nril.Load(ofd.FileName);
-                // Populate list
-                this.listBox1.Items.Clear();
-                int fileCount = nril.GetFileCount();
-                for (int i = 0; i < fileCount; i++)
+                if (nril.Load(ofd.FileName))
                 {
-                    this.listBox1.Items.Add("File" + (i+1));
+                    if (nril.status != "")
+                    {
+                        MessageBox.Show(nril.status);
+                    }
+
+                    // Populate file list
+                    this.listBox1.Items.Clear();
+                    int fileCount = nril.GetFileCount();
+                    for (int i = 0; i < fileCount; i++)
+                    {
+                        this.listBox1.Items.Add("Image" + (i + 1));
+                    }
+
+                    // Popuate animation list
+                    this.listBox3.Items.Clear();
+                    int animCount = nril.GetAnimationsCount();
+                    for (int i = 0; i < animCount; i++)
+                    {
+                        NRILoader.Animation anim = nril.GetAnimations(i);
+                        this.listBox3.Items.Add("" + (i+1) + ". " + anim.name);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Unable to load NRI file");
                 }
             }
         }
 
-        private Stream lastimagestream = null;
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (nril.GetFileCount() > 0)
@@ -46,15 +67,11 @@ namespace CaballaRE
                 int fileid = this.listBox1.SelectedIndex;
                 if (fileid < nril.GetFileCount())
                 {
-                    if (lastimagestream != null)
-                    {
-                        lastimagestream.Close();
-                    }
                     try
                     {
                         Stream bmpstream = nril.GetFile(fileid);
                         this.pictureBox1.Image = Image.FromStream(bmpstream);
-                        lastimagestream = bmpstream;
+                        bmpstream.Close();
                     }
                     catch
                     {
@@ -64,6 +81,7 @@ namespace CaballaRE
             }
         }
 
+        // Extract image
         private void button2_Click(object sender, EventArgs e)
         {
             if (nril.GetFileCount() > 0)
@@ -71,11 +89,6 @@ namespace CaballaRE
                 int fileid = this.listBox1.SelectedIndex;
                 if (fileid < nril.GetFileCount() && fileid >= 0)
                 {
-                    if (lastimagestream != null)
-                    {
-                        lastimagestream.Close();
-                    }
-
                     SaveFileDialog sfd = new SaveFileDialog();
                     sfd.Filter = "BMP file|*.bmp|All files|*.*";
                     if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -92,18 +105,28 @@ namespace CaballaRE
             }
         }
 
+        // Open DAT
         private void button3_Click(object sender, EventArgs e)
         {
-            
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "DAT files (*.dat)|*.dat|All files|*.*";
             if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                dl.Load(ofd.FileName);
-                this.textBox1.Text = dl.GetString();
+                this.BeginOperation(new DoWorkEventHandler(
+                    delegate(object s, DoWorkEventArgs ev)
+                    {
+                        dl.Load(ofd.FileName);
+                    }
+                ), new RunWorkerCompletedEventHandler(
+                    delegate(object s, RunWorkerCompletedEventArgs ev)
+                    {
+                        this.textBox1.Text = dl.GetString();
+                    }
+                ));
             }
         }
 
+        // Export unencrypted DAT
         private void button4_Click(object sender, EventArgs e)
         {
             if (dl.GetFile() == null)
@@ -121,28 +144,53 @@ namespace CaballaRE
             }
         }
 
+        // Display processed XML
         private void button5_Click(object sender, EventArgs e)
         {
-            this.textBox1.Text = dl.GetString(true, true);
+            string result = "";
+            this.BeginOperation(new DoWorkEventHandler(
+                delegate(object s, DoWorkEventArgs ev)
+                {
+                    result = dl.GetString(true, true);
+                }
+            ), new RunWorkerCompletedEventHandler(
+                delegate(object s, RunWorkerCompletedEventArgs ev)
+                {
+                    this.textBox1.Text = result;// dl.GetString(true, true);
+                }
+            ));
+            //this.textBox1.Text = dl.GetString(true, true);
         }
 
+        // Export processed XML
         private void button6_Click(object sender, EventArgs e)
         {
             SaveFileDialog sfd = new SaveFileDialog();
             sfd.Filter = "XML file|*.xml|All files|*.*";
             if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                BinaryWriter bw = new BinaryWriter(File.Create(sfd.FileName));
-                byte[] str = Encoding.UTF8.GetBytes(dl.GetString(true));
-                bw.Write(str);
-                bw.Flush();
-                bw.Close();
+                byte[] str = null;
+                this.BeginOperation(new DoWorkEventHandler(
+                    delegate(object s, DoWorkEventArgs ev)
+                    {
+                        str = Encoding.UTF8.GetBytes(dl.GetString(true));
+                    }
+                ), new RunWorkerCompletedEventHandler(
+                    delegate(object s, RunWorkerCompletedEventArgs ev)
+                    {
+                        BinaryWriter bw = new BinaryWriter(File.Create(sfd.FileName));
+                        bw.Write(str);
+                        bw.Flush();
+                        bw.Close();
+                    }
+                ));
             }
         }
 
         List<string> tables = new List<string>();
         int currenttable = -1; // Current active table
 
+        // Load Libconfig.xml
         private void button7_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
@@ -165,6 +213,7 @@ namespace CaballaRE
                 string[] parts = seltext.Split(new char[] { '.' }, 2);
                 int tableid = int.Parse(parts[0]);
                 currenttable = tableid;
+                this.label1.Text = "Table: " + seltext;
                 if (tableid >= 0)
                 {
                     this.dataGridView1.DataSource = this.dl.GetTable(tableid);
@@ -197,6 +246,7 @@ namespace CaballaRE
             UpdateListbox();
         }
 
+        // Update table
         private void button12_Click(object sender, EventArgs e)
         {
             this.dl.UpdateTable(this.currenttable);
@@ -306,6 +356,7 @@ namespace CaballaRE
             }
         }
 
+        // Import table
         private void button8_Click(object sender, EventArgs e)
         {
             // Import CSV
@@ -327,10 +378,208 @@ namespace CaballaRE
             }
         }
 
+        // Localization helper
         private void button10_Click(object sender, EventArgs e)
         {
             CSVHelper csvh = new CSVHelper();
             csvh.Show();
+        }
+
+
+        /** Background worker **/
+        private BackgroundWorker bw = null;
+        // Performs the task in a background worker
+        private void BeginOperation(DoWorkEventHandler taskFunc, RunWorkerCompletedEventHandler completeFunc)
+        {
+            this.bw = new BackgroundWorker();
+            this.bw.DoWork += taskFunc;
+            this.bw.RunWorkerCompleted += completeFunc;
+
+            // Progress bar handling
+            this.bw.WorkerReportsProgress = true;
+            this.dl.ProgressCallback = this.bw.ReportProgress;
+            this.bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(this.ThreadedOperationDone);
+            this.bw.ProgressChanged += new ProgressChangedEventHandler(this.ThreadedOperationProgress);
+
+            this.ThreadedOperationStart();
+        }
+        
+        // Event
+        private void ThreadedOperationStart()
+        {
+            this.toolStripProgressBar1.Visible = true;
+            bw.RunWorkerAsync();
+        }
+        // Event
+        private void ThreadedOperationProgress(object sender, ProgressChangedEventArgs e)
+        {
+            //this.toolStripProgressBar1.Value = this.dl.GetProgress();
+            this.toolStripProgressBar1.Value = e.ProgressPercentage;
+        }
+        // Event
+        private void ThreadedOperationDone(object sender, EventArgs e) // GUI thread
+        {
+            //this.textBox1.Text = dl.GetString();
+            this.toolStripProgressBar1.Visible = false;
+            this.toolStripStatusLabel1.Text = this.dl.GetStatus();
+        }
+
+        // Decompress file
+        private void button11_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "NRI files (*.nri;*.bac)|*.nri;*.bac|All files|*.*";
+            if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                byte[] data = nril.DecompressFile(ofd.FileName);
+                if (data == null)
+                {
+                    MessageBox.Show("Input data not compressed");
+                    return;
+                }
+                SaveFileDialog sfd = new SaveFileDialog();
+                sfd.Filter = "NRI files (*.nri;*.bac)|*.nri;*.bac|All files|*.*";
+                if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    BinaryWriter bw = new BinaryWriter(File.Create(sfd.FileName));
+                    bw.Write(data, 0, data.Length);
+                    bw.Flush();
+                    bw.Close();
+                }
+            }
+        }
+
+        // Extract all images
+        private void button13_Click(object sender, EventArgs e)
+        {
+            if (nril.GetFileCount() > 0)
+            {
+                FolderBrowserDialog sfd = new FolderBrowserDialog();
+                if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    string targetDir = sfd.SelectedPath;
+                    int files = nril.GetFileCount();
+                    for (int i = 0; i < files; i++)
+                    {
+                        string genFileName = targetDir + "\\img" + (i+1) + ".bmp";
+                        MemoryStream bmpstream = nril.GetFile(i);
+                        BinaryWriter bw = new BinaryWriter(File.Create(genFileName));
+                        bmpstream.Flush();
+                        bw.Write(bmpstream.ToArray());
+                        bw.Flush();
+                        bw.Close();
+                        bmpstream.Close();
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Nothing to extract");
+            }
+        }
+
+        // Animation time bar
+        private void trackBar1_Scroll(object sender, EventArgs e)
+        {
+            DisplayAnimation(listBox3.SelectedIndex, trackBar1.Value);
+        }
+
+        // Animation selector
+        private void listBox3_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int id = listBox3.SelectedIndex;
+            if (id >= 0 && id < nril.GetAnimationsCount())
+            {
+                trackBar1.Minimum = 0;
+
+                NRILoader.Animation anim = nril.GetAnimations(id);
+                trackBar1.Maximum = anim.frames.Count;
+                
+                DisplayAnimation(id, 0);
+            }
+        }
+
+        // Displays an animation
+        private void DisplayAnimation(int id, int frameid)
+        {
+            if (id >= 0 && id < nril.GetAnimationsCount())
+            {
+                NRILoader.Animation anim = nril.GetAnimations(id);
+
+                this.label2.Text = anim.name + " (" + anim.frames.Count + " frames)";
+                if (frameid >= 0 && frameid < anim.frames.Count)
+                {
+                    // Render animation
+                    NRILoader.Frame frame = anim.frames[frameid];
+                    // TODO: Adjusted to fit entire animation
+                    int canvaswidth = 500;
+                    int canvasheight = 500;
+
+                    // Setup chroma-key maps
+                    ColorMap cmap1 = new ColorMap();
+                    cmap1.OldColor = Color.FromArgb(0, 255, 0);
+                    cmap1.NewColor = Color.Transparent;
+                    ColorMap cmap2 = new ColorMap();
+                    cmap2.OldColor = Color.FromArgb(255, 0, 255);
+                    cmap2.NewColor = Color.Transparent;
+                    ImageAttributes imageAttributes = new ImageAttributes();
+                    imageAttributes.SetRemapTable(new ColorMap[] { cmap1, cmap2 }, ColorAdjustType.Bitmap);
+
+                    Bitmap canvas = new Bitmap(canvaswidth, canvasheight); 
+                    Graphics g = Graphics.FromImage(canvas);
+                    int baseoffsetx = canvaswidth/2;
+                    int baseoffsety = canvasheight/2;
+
+                    // Draw guide lines (for debugging)
+                    Pen gridPen = new Pen(Color.Black);
+                    gridPen.Width = 1;
+                    // Grid center is at (baseoffsetx, baseoffsety)
+                    g.DrawLine(gridPen, 0, baseoffsety, baseoffsetx * 2, baseoffsety);
+                    g.DrawLine(gridPen, baseoffsetx, 0, baseoffsetx, baseoffsety * 2);
+
+                    for (int i = 0; i < frame.planes.Count; i++)
+                    {
+                        // Draw the requested image
+                        NRILoader.FramePlane plane = frame.planes[i];
+                        int bitmapid = plane.bitmapid;
+
+                        // Some animations appear to have negative ids specfied (need more investigation)
+                        if (bitmapid >= 0 && bitmapid < nril.GetFileCount())
+                        {
+                            Stream bmpstream = nril.GetFile(bitmapid);
+                            Bitmap bmp = new Bitmap(bmpstream);
+
+                            // Perform image flips
+                            switch (plane.reverseflag) {
+                                case 1:
+                                    bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
+                                    break;
+                                case 2:
+                                    bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                                    break;
+                                case 3:
+                                    bmp.RotateFlip(RotateFlipType.RotateNoneFlipXY);
+                                    break;
+                            }
+
+                            int x = plane.x + baseoffsetx;
+                            int y = plane.y + baseoffsety;
+                            g.DrawImage(bmp,
+                                new Rectangle(x, y, bmp.Width, bmp.Height),
+                                0, 0, bmp.Width, bmp.Height
+                                ,GraphicsUnit.Pixel, imageAttributes);
+                            bmpstream.Close();
+                        }
+                        else
+                        {
+                            MessageBox.Show("Unable to load " + bitmapid);
+                        }
+                    }
+
+                    // Display to picture box
+                    this.pictureBox2.Image = canvas;
+                }
+            }
         }
     }
 }

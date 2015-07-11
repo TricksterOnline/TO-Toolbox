@@ -18,11 +18,26 @@ namespace CaballaRE
         private uint[] key_libconfig = new uint[] { 0x2353686f, 0x774d6554, 0x68654d6f, 0x6e657923 };
 
         private byte[] currentfile = null;
+        float progress = 0;
+        string statusmessage = "";
+
+        public Action<int> ProgressCallback = null;
+
+        // Crypto function delegates
+        XTEAFunction encFunc = null;
+        XTEAFunction decFunc = null;
+
         public void Load(string src)
         {
-            currentfile = null;
+            // Init reusable delegates
+            encFunc = new XTEAFunction(this.Encrypt);
+            decFunc = new XTEAFunction(this.Decrypt);
+
+            this.progress = 0;
+            this.currentfile = null;
             BinaryReader b = new BinaryReader(File.Open(src, FileMode.Open));
             
+            // Setup key
             uint[] key;
             int header = b.PeekChar();
             if (header == 1)
@@ -34,21 +49,124 @@ namespace CaballaRE
             }
 
             // Decrypt the file
-            MemoryStream ms = new MemoryStream();
-            BinaryWriter bw = new BinaryWriter(ms);
+            /*MemoryStream ms = new MemoryStream();
+            long lastprogress = 0;
+            long currentprogress = 0;
+            long divisions = b.BaseStream.Length / 100;
+
+            float filelen = (float)b.BaseStream.Length;
             while (b.BaseStream.Position < b.BaseStream.Length)
             {
                 byte[] temp = this.DecryptBlock(b, key);
-                bw.Write(temp);
-            }
-            bw.Flush();
-            
-            b.Close();
+                ms.Write(temp, 0, temp.Length);
 
+                currentprogress = b.BaseStream.Position / divisions;
+
+                // Report progress
+                if (currentprogress > lastprogress)
+                {
+                    lastprogress = currentprogress;
+                    if (this.ProgressCallback != null)
+                    {
+                        this.progress = (float)b.BaseStream.Position / filelen;
+                        this.ProgressCallback(this.GetProgress());
+                    }
+                }
+            }
+
+            this.progress = 1.0f;
+            if (this.ProgressCallback != null)
+            {
+                this.ProgressCallback(100);
+            }
             currentfile = ms.ToArray();
+            */
+
+            currentfile = this.DecryptFile(b, key);
+
+            b.Close();
+        }
+
+        public int GetProgress()
+        {
+            return (int)(this.progress * 100.0);
+        }
+
+        public string GetStatus()
+        {
+            return this.statusmessage;
         }
 
         /** Encryption/Decryption functions **/
+
+        // Parallelized XTEA file decryption
+        byte[] DecryptFile(BinaryReader b, uint[] key)
+        {
+            MemoryStream ms = new MemoryStream();
+            long totalblocks = b.BaseStream.Length / 8;
+            // Separate workload into 100 sequential steps (to allow progress measurement)
+            int intervals = 100;
+            long intervalworkload = totalblocks / intervals;
+            for (int i = 0; i < intervals-1; i++)
+            {
+                if (intervalworkload >= 1)
+                {
+                    int blocksize = (int)intervalworkload * 8;
+                    byte[] result = this.ParallelDecrypt(b.ReadBytes(blocksize), key);
+                    ms.Write(result, 0, result.Length);
+                }
+                if (this.ProgressCallback != null)
+                {
+                    this.ProgressCallback(i);
+                }
+            }
+            // Last interval
+            long remainderLen = b.BaseStream.Length - b.BaseStream.Position;
+            byte[] result2 = this.ParallelDecrypt(b.ReadBytes((int)remainderLen), key);
+            ms.Write(result2, 0, result2.Length);
+            if (this.ProgressCallback != null)
+            {
+                this.ProgressCallback(100);
+            }
+
+            return ms.ToArray();
+        }
+
+        // Parallelized XTEA block decryption
+        // Given this block (size multiple of 8), decrypt
+        byte[] ParallelDecrypt(byte[] block, uint[] key)
+        {
+            byte[] resultarr = new byte[block.Length];
+            int blocks = block.Length / 8;
+            Parallel.For(0, blocks, i =>
+            {
+                int blockoffset = i * 8;
+
+                uint v0 = (uint)(block[blockoffset + 0] << 24 
+                    | block[blockoffset + 1] << 16
+                    | block[blockoffset + 2] << 8
+                    | block[blockoffset + 3]);
+                uint v1 = (uint)(block[blockoffset + 4] << 24
+                    | block[blockoffset + 5] << 16
+                    | block[blockoffset + 6] << 8
+                    | block[blockoffset + 7]);
+
+                uint[] result = this.Decrypt(v0, v1, key);
+
+                // Output is in big-endian
+                
+                resultarr[blockoffset + 0] = (byte)((result[0] >> 24));
+                resultarr[blockoffset + 1] = (byte)((result[0] >> 16));
+                resultarr[blockoffset + 2] = (byte)((result[0] >> 8));
+                resultarr[blockoffset + 3] = (byte)((result[0]));
+                resultarr[blockoffset + 4] = (byte)((result[1] >> 24));
+                resultarr[blockoffset + 5] = (byte)((result[1] >> 16));
+                resultarr[blockoffset + 6] = (byte)((result[1] >> 8));
+                resultarr[blockoffset + 7] = (byte)((result[1]));
+            });
+
+            return resultarr;
+        }
 
         // Return current file data (cached)
         public byte[] GetFile()
@@ -68,24 +186,22 @@ namespace CaballaRE
                 // Strip null bytes
                 MemoryStream ms = new MemoryStream();
 
-                bool lastbytenull = false;
+                int divisions = this.currentfile.Length / 100;
                 for (int i = 0; i < this.currentfile.Length; i++)
                 {
                     if (this.currentfile[i] != 0)
                     {
                         if (reconvertnewline && this.currentfile[i] == 0x0A)
                         {
-                            // Windows linebreaks
-                            ms.WriteByte(0x0d);
+                            ms.WriteByte(0x0d); // Windows linebreaks
                         }
                         ms.WriteByte(this.currentfile[i]);
-                        lastbytenull = false;
                     }
-                    else if (!lastbytenull)
+
+                    if (this.ProgressCallback != null && i % divisions == 0)
                     {
-                        //ms.WriteByte(0x0d);
-                        //ms.WriteByte(0x0a);
-                        lastbytenull = true;
+                        this.progress = (float)i / (float)this.currentfile.Length;
+                        this.ProgressCallback(this.GetProgress());
                     }
                 }
 
@@ -127,14 +243,14 @@ namespace CaballaRE
 
             // Output is in big-endian
             byte[] resultarr = new byte[8];
-            resultarr[0] = (byte)((result[0] >> 24) & 0xFF);
-            resultarr[1] = (byte)((result[0] >> 16) & 0xFF);
-            resultarr[2] = (byte)((result[0] >> 8) & 0xFF);
-            resultarr[3] = (byte)((result[0]) & 0xFF);
-            resultarr[4] = (byte)((result[1] >> 24) & 0xFF);
-            resultarr[5] = (byte)((result[1] >> 16) & 0xFF);
-            resultarr[6] = (byte)((result[1] >> 8) & 0xFF);
-            resultarr[7] = (byte)((result[1]) & 0xFF);
+            resultarr[0] = (byte)((result[0] >> 24));
+            resultarr[1] = (byte)((result[0] >> 16));
+            resultarr[2] = (byte)((result[0] >> 8));
+            resultarr[3] = (byte)((result[0]));
+            resultarr[4] = (byte)((result[1] >> 24));
+            resultarr[5] = (byte)((result[1] >> 16));
+            resultarr[6] = (byte)((result[1] >> 8));
+            resultarr[7] = (byte)((result[1]));
 
             return resultarr;
         }
@@ -142,23 +258,23 @@ namespace CaballaRE
         // Reads 8-byte block from file and encrypt it
         byte[] EncryptBlock(BinaryReader b, uint[] key)
         {
-            return ProcessBlock(b, key, new XTEAFunction(this.Encrypt));
+            //return ProcessBlock(b, key, new XTEAFunction(this.Encrypt));
+            return ProcessBlock(b, key, this.encFunc);
         }
 
         // Reads 8-byte block from file and decrypt it
         byte[] DecryptBlock(BinaryReader b, uint[] key)
         {
-            return ProcessBlock(b, key, new XTEAFunction(this.Decrypt));
+            return ProcessBlock(b, key, this.decFunc);
+            //return ProcessBlock(b, key, new XTEAFunction(this.Decrypt));
         }
 
         // Regular XTEA
-        uint[] Encrypt(uint v0, uint v1, uint[] key)
+        uint[] Encrypt(uint y, uint z, uint[] key)
         {
-            uint y = v0;
-            uint z = v1;
-            uint sum = 0;
             uint delta = 0x9e3779b9;
             uint n = 32;
+            uint sum = 0;
 
             while (n-- > 0)
             {
@@ -167,22 +283,15 @@ namespace CaballaRE
                 z += (y << 4 ^ y >> 5) + y ^ sum + key[sum >> 11 & 3];
             }
 
-            v0 = y;
-            v1 = z;
-
-            return new uint[] { v0, v1 };
+            return new uint[] { y, z };
         }
 
         // Regular XTEA
-        uint[] Decrypt(uint v0, uint v1, uint[] key)
+        uint[] Decrypt(uint y, uint z, uint[] key)
         {
-            uint n = 32;
-            uint sum;
-            uint y = v0;
-            uint z = v1;
             uint delta = 0x9e3779b9;
-
-            sum = delta << 5; // Equal to 0xc6ef3720
+            uint n = 32;
+            uint sum = delta << 5; // Equal to 0xc6ef3720
 
             while (n-- > 0)
             {
@@ -191,10 +300,7 @@ namespace CaballaRE
                 y -= (z << 4 ^ z >> 5) + z ^ sum + key[sum & 3];
             }
 
-            v0 = y;
-            v1 = z;
-
-            return new uint[] { v0, v1 };
+            return new uint[] { y, z };
         }
 
         /** LibConfig viewer **/

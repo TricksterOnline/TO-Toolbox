@@ -64,9 +64,9 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(145, 17);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(112, 13);
+            this.label1.Size = new System.Drawing.Size(109, 13);
             this.label1.TabIndex = 2;
-            this.label1.Text = " Source: Not specified";
+            this.label1.Text = "Source: Not specified";
             // 
             // label2
             // 
@@ -133,7 +133,10 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "CSVHelper";
+            this.ShowIcon = false;
             this.Text = "Localization Helper";
             this.ResumeLayout(false);
             this.PerformLayout();
