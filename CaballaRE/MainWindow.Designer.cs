@@ -36,6 +36,13 @@
             this.button3 = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.tabControl2 = new System.Windows.Forms.TabControl();
+            this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.label2 = new System.Windows.Forms.Label();
+            this.trackBar1 = new System.Windows.Forms.TrackBar();
+            this.pictureBox2 = new System.Windows.Forms.PictureBox();
+            this.listBox3 = new System.Windows.Forms.ListBox();
             this.button13 = new System.Windows.Forms.Button();
             this.button11 = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -62,26 +69,19 @@
             this.dATUnencryptedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dATToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.iDXToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.tabControl2 = new System.Windows.Forms.TabControl();
-            this.tabPage4 = new System.Windows.Forms.TabPage();
-            this.tabPage5 = new System.Windows.Forms.TabPage();
-            this.listBox3 = new System.Windows.Forms.ListBox();
-            this.pictureBox2 = new System.Windows.Forms.PictureBox();
-            this.trackBar1 = new System.Windows.Forms.TrackBar();
-            this.label2 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.tabControl2.SuspendLayout();
+            this.tabPage4.SuspendLayout();
+            this.tabPage5.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
-            this.tabControl2.SuspendLayout();
-            this.tabPage4.SuspendLayout();
-            this.tabPage5.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             this.SuspendLayout();
             // 
             // button1
@@ -164,6 +164,87 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "NRI Viewer";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // tabControl2
+            // 
+            this.tabControl2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl2.Controls.Add(this.tabPage4);
+            this.tabControl2.Controls.Add(this.tabPage5);
+            this.tabControl2.Location = new System.Drawing.Point(6, 40);
+            this.tabControl2.Name = "tabControl2";
+            this.tabControl2.SelectedIndex = 0;
+            this.tabControl2.Size = new System.Drawing.Size(628, 304);
+            this.tabControl2.TabIndex = 6;
+            // 
+            // tabPage4
+            // 
+            this.tabPage4.Controls.Add(this.listBox1);
+            this.tabPage4.Controls.Add(this.pictureBox1);
+            this.tabPage4.Location = new System.Drawing.Point(4, 22);
+            this.tabPage4.Name = "tabPage4";
+            this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage4.Size = new System.Drawing.Size(620, 278);
+            this.tabPage4.TabIndex = 0;
+            this.tabPage4.Text = "Images";
+            this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // tabPage5
+            // 
+            this.tabPage5.Controls.Add(this.label2);
+            this.tabPage5.Controls.Add(this.trackBar1);
+            this.tabPage5.Controls.Add(this.pictureBox2);
+            this.tabPage5.Controls.Add(this.listBox3);
+            this.tabPage5.Location = new System.Drawing.Point(4, 22);
+            this.tabPage5.Name = "tabPage5";
+            this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage5.Size = new System.Drawing.Size(620, 278);
+            this.tabPage5.TabIndex = 1;
+            this.tabPage5.Text = "Animations";
+            this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(129, 3);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(112, 13);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "No animation selected";
+            // 
+            // trackBar1
+            // 
+            this.trackBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.trackBar1.Location = new System.Drawing.Point(129, 222);
+            this.trackBar1.Name = "trackBar1";
+            this.trackBar1.Size = new System.Drawing.Size(485, 45);
+            this.trackBar1.TabIndex = 2;
+            this.trackBar1.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
+            this.trackBar1.Scroll += new System.EventHandler(this.trackBar1_Scroll);
+            // 
+            // pictureBox2
+            // 
+            this.pictureBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pictureBox2.Location = new System.Drawing.Point(129, 19);
+            this.pictureBox2.Name = "pictureBox2";
+            this.pictureBox2.Size = new System.Drawing.Size(485, 197);
+            this.pictureBox2.TabIndex = 1;
+            this.pictureBox2.TabStop = false;
+            // 
+            // listBox3
+            // 
+            this.listBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.listBox3.FormattingEnabled = true;
+            this.listBox3.Location = new System.Drawing.Point(3, 3);
+            this.listBox3.Name = "listBox3";
+            this.listBox3.Size = new System.Drawing.Size(120, 264);
+            this.listBox3.TabIndex = 0;
+            this.listBox3.SelectedIndexChanged += new System.EventHandler(this.listBox3_SelectedIndexChanged);
             // 
             // button13
             // 
@@ -387,123 +468,42 @@
             this.iDXToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.contextMenuStrip1.Size = new System.Drawing.Size(177, 114);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(231, 136);
             // 
             // xLSExcelToolStripMenuItem
             // 
             this.xLSExcelToolStripMenuItem.Name = "xLSExcelToolStripMenuItem";
-            this.xLSExcelToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
-            this.xLSExcelToolStripMenuItem.Text = "CSV (Current table)";
+            this.xLSExcelToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
+            this.xLSExcelToolStripMenuItem.Text = "CSV (Currently selected table)";
             this.xLSExcelToolStripMenuItem.Click += new System.EventHandler(this.xLSExcelToolStripMenuItem_Click);
             // 
             // xMLToolStripMenuItem
             // 
             this.xMLToolStripMenuItem.Name = "xMLToolStripMenuItem";
-            this.xMLToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+            this.xMLToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
             this.xMLToolStripMenuItem.Text = "XML";
             this.xMLToolStripMenuItem.Click += new System.EventHandler(this.xMLToolStripMenuItem_Click);
             // 
             // dATUnencryptedToolStripMenuItem
             // 
             this.dATUnencryptedToolStripMenuItem.Name = "dATUnencryptedToolStripMenuItem";
-            this.dATUnencryptedToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+            this.dATUnencryptedToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
             this.dATUnencryptedToolStripMenuItem.Text = "DAT (Unencrypted)";
             this.dATUnencryptedToolStripMenuItem.Click += new System.EventHandler(this.dATUnencryptedToolStripMenuItem_Click);
             // 
             // dATToolStripMenuItem
             // 
             this.dATToolStripMenuItem.Name = "dATToolStripMenuItem";
-            this.dATToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+            this.dATToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
             this.dATToolStripMenuItem.Text = "DAT";
             this.dATToolStripMenuItem.Click += new System.EventHandler(this.dATToolStripMenuItem_Click);
             // 
             // iDXToolStripMenuItem
             // 
             this.iDXToolStripMenuItem.Name = "iDXToolStripMenuItem";
-            this.iDXToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+            this.iDXToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
             this.iDXToolStripMenuItem.Text = "IDX";
             this.iDXToolStripMenuItem.Click += new System.EventHandler(this.iDXToolStripMenuItem_Click);
-            // 
-            // tabControl2
-            // 
-            this.tabControl2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tabControl2.Controls.Add(this.tabPage4);
-            this.tabControl2.Controls.Add(this.tabPage5);
-            this.tabControl2.Location = new System.Drawing.Point(6, 40);
-            this.tabControl2.Name = "tabControl2";
-            this.tabControl2.SelectedIndex = 0;
-            this.tabControl2.Size = new System.Drawing.Size(628, 304);
-            this.tabControl2.TabIndex = 6;
-            // 
-            // tabPage4
-            // 
-            this.tabPage4.Controls.Add(this.listBox1);
-            this.tabPage4.Controls.Add(this.pictureBox1);
-            this.tabPage4.Location = new System.Drawing.Point(4, 22);
-            this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage4.Size = new System.Drawing.Size(620, 278);
-            this.tabPage4.TabIndex = 0;
-            this.tabPage4.Text = "Images";
-            this.tabPage4.UseVisualStyleBackColor = true;
-            // 
-            // tabPage5
-            // 
-            this.tabPage5.Controls.Add(this.label2);
-            this.tabPage5.Controls.Add(this.trackBar1);
-            this.tabPage5.Controls.Add(this.pictureBox2);
-            this.tabPage5.Controls.Add(this.listBox3);
-            this.tabPage5.Location = new System.Drawing.Point(4, 22);
-            this.tabPage5.Name = "tabPage5";
-            this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage5.Size = new System.Drawing.Size(620, 278);
-            this.tabPage5.TabIndex = 1;
-            this.tabPage5.Text = "Animations";
-            this.tabPage5.UseVisualStyleBackColor = true;
-            // 
-            // listBox3
-            // 
-            this.listBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.listBox3.FormattingEnabled = true;
-            this.listBox3.Location = new System.Drawing.Point(3, 3);
-            this.listBox3.Name = "listBox3";
-            this.listBox3.Size = new System.Drawing.Size(120, 264);
-            this.listBox3.TabIndex = 0;
-            this.listBox3.SelectedIndexChanged += new System.EventHandler(this.listBox3_SelectedIndexChanged);
-            // 
-            // pictureBox2
-            // 
-            this.pictureBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBox2.Location = new System.Drawing.Point(129, 19);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(485, 197);
-            this.pictureBox2.TabIndex = 1;
-            this.pictureBox2.TabStop = false;
-            // 
-            // trackBar1
-            // 
-            this.trackBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.trackBar1.Location = new System.Drawing.Point(129, 222);
-            this.trackBar1.Name = "trackBar1";
-            this.trackBar1.Size = new System.Drawing.Size(485, 45);
-            this.trackBar1.TabIndex = 2;
-            this.trackBar1.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
-            this.trackBar1.Scroll += new System.EventHandler(this.trackBar1_Scroll);
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(129, 3);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(112, 13);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "No animation selected";
             // 
             // MainWindow
             // 
@@ -517,6 +517,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
+            this.tabControl2.ResumeLayout(false);
+            this.tabPage4.ResumeLayout(false);
+            this.tabPage5.ResumeLayout(false);
+            this.tabPage5.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
             this.tabPage3.ResumeLayout(false);
@@ -525,12 +531,6 @@
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             this.contextMenuStrip1.ResumeLayout(false);
-            this.tabControl2.ResumeLayout(false);
-            this.tabPage4.ResumeLayout(false);
-            this.tabPage5.ResumeLayout(false);
-            this.tabPage5.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

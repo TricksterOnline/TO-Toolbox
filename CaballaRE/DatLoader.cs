@@ -765,6 +765,11 @@ namespace CaballaRE
         // Exports the given table to CSV format
         public byte[] ExportCSV(int tableid)
         {
+            if (tableid > this.tables.Count || tableid < 0)
+            {
+                return null;
+            }
+
             DataTable table = this.tables[tableid].GetTable();
 
             var result = new StringBuilder();

@@ -317,6 +317,12 @@ namespace CaballaRE
 
         private void xLSExcelToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (currenttable < 0)
+            {
+                MessageBox.Show("Please select a table to export");
+                return;
+            }
+
             // CSV export
             SaveFileDialog sfd = new SaveFileDialog();
             sfd.Filter = "CSV file|*.csv|All files|*.*";
@@ -326,7 +332,12 @@ namespace CaballaRE
                 // Insert UTF-8 BOM so that other languages can be read by CSV editors
                 byte[] utf8bom = new byte[3] {0xEF, 0xBB, 0xBF};
                 bw.Write(utf8bom, 0, 3);
-                bw.Write(dl.ExportCSV(currenttable));
+                byte[] data = dl.ExportCSV(currenttable);
+                if (data != null) {
+                    bw.Write(data);
+                } else {
+                    MessageBox.Show("Invalid table selected");
+                }
                 bw.Flush();
                 bw.Close();
             }
@@ -359,22 +370,37 @@ namespace CaballaRE
         // Import table
         private void button8_Click(object sender, EventArgs e)
         {
+            if (currenttable < 0)
+            {
+                MessageBox.Show("No table selected to override");
+                return;
+            }
+
             // Import CSV
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "CSV files (*.csv)|*.csv|All files|*.*";
             if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                int result = dl.ImportTable(currenttable, ofd.FileName);
-                switch (result)
-                {
-                    case -1:
-                        MessageBox.Show("No table selected to override");
-                        break;
-                    case 1:
-                        MessageBox.Show("Table structure do not match imported format");
-                        break;
+                try {
+                    int result = dl.ImportTable(currenttable, ofd.FileName);
+                    switch (result)
+                    {
+                        case -1:
+                            MessageBox.Show("No table selected to override");
+                            break;
+                        case 1:
+                            MessageBox.Show("Table structure do not match imported format");
+                            break;
+                        case 0:
+                            this.dataGridView1.DataSource = this.dl.GetTable(currenttable);
+                            MessageBox.Show("Selected table has been overwritten");
+                            break;
+                    }
                 }
-                this.dataGridView1.DataSource = this.dl.GetTable(currenttable);
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Failed to override table, table format do not match");
+                }
             }
         }
 
