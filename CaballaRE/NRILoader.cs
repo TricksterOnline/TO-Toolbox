@@ -346,11 +346,11 @@ namespace CaballaRE
             bw.Write(bmpheadersize); // Location of pixel data
             int dibheadersize = bmpheadersize - 14;
             bw.Write(dibheadersize); // DIB header size
-            bw.Write(width);
-            bw.Write(height);
-            bw.Write((short)1);
-            bw.Write((short)this.pixelsize);
-            bw.Write((int)0);
+            bw.Write(width); // Image width
+            bw.Write(height); // Image height
+            bw.Write((short)1); // Planes
+            bw.Write((short)this.pixelsize); // Bits per pixel
+            bw.Write((int)0); // Compression (none)
             bw.Write(bmpdatasize);
             bw.Write((int)0);
             bw.Write((int)0);
@@ -358,7 +358,8 @@ namespace CaballaRE
             bw.Write((int)0);
 
             // BMP color table
-            if (this.colortable != null)
+            // For BMPv3, BMP with pixel size 16 will not have a color palette
+            if (this.colortable != null && this.pixelsize < 16)
             {
                 bw.Write(this.colortable);
             }
