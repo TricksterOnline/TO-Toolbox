@@ -200,6 +200,10 @@ namespace CaballaRE
                 dl.LoadLibConfig(ofd.FileName);
                 tables = dl.GetTableList();
                 UpdateListbox();
+                if (dl.GetStatus() != "")
+                {
+                    MessageBox.Show(dl.GetStatus());
+                }
             }
         }
 

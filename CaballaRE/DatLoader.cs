@@ -385,6 +385,26 @@ namespace CaballaRE
                 return this.rows[row][col];
             }
 
+            // Fix row count and col count in case it was incorrect
+            public bool UpdateMetadata()
+            {
+                int rowcount = this.rows.Count;
+                int colcount = this.colcount;
+
+                // Safety checks
+                int matchRowCount = 0;
+                int matchColCount = 0;
+                int.TryParse(this.RowCount, out matchRowCount);
+                int.TryParse(this.FieldCnt, out matchColCount);
+                if (matchRowCount != rowcount || matchColCount != colcount)
+                {
+                    this.RowCount = rowcount.ToString();
+                    this.FieldCnt = colcount.ToString();
+                    return false;
+                }
+                return true;
+            }
+
             // Explicitly set table data
             public void SetTableData(List<string[]> rows)
             {
@@ -478,6 +498,7 @@ namespace CaballaRE
 
         public void LoadLibConfig(string file)
         {
+            this.statusmessage = "";
             tables.Clear();
             infotables.Clear();
             XmlReader xmlr = XmlReader.Create(file);
@@ -528,6 +549,10 @@ namespace CaballaRE
                         case "ini":
                             break;
                         case "table":
+                            if (!currentTable.UpdateMetadata())
+                            {
+                                this.statusmessage = "Warning: Table \"" + currentTable.Name + "\" data might be malformed";
+                            }
                             tables.Add(currentTable);
                             break;
                         case "fieldinfo":
@@ -546,6 +571,15 @@ namespace CaballaRE
                 {
                     currentTable.SetValue(currentTag, xmlr.Value);
                 }
+            }
+
+            // Fix table count info if it does not match
+            int matchTableCount = 0;
+            int.TryParse(tablecount, out matchTableCount);
+            if (matchTableCount != tables.Count)
+            {
+                this.statusmessage = "Warning: Number of tables do not match libconfig info";
+                tablecount = tables.Count.ToString();
             }
         }
 
