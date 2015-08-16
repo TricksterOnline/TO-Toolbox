@@ -412,6 +412,9 @@ namespace CaballaRE
                         }
                         this.rows.Add(row);
                     }
+
+                    // Update row count
+                    this.RowCount = this.rows.Count.ToString();
                 }
             }
             
@@ -550,6 +553,7 @@ namespace CaballaRE
         // Export to XML file
         public byte[] ExportXML()
         {
+            this.statusmessage = "";
             libconfigidxtables.Clear();
             XmlWriterSettings xmls = new XmlWriterSettings();
             xmls.Encoding = new UTF8Encoding(false); // Don't include BOM
@@ -600,9 +604,25 @@ namespace CaballaRE
                     // Follow format provided in cilist
                     for (int c = 0; c < cilist.Length; c++)
                     {
-                        string value = ti.GetValue(j, c);
+                        string value = "";
+                        try
+                        {
+                            string tempvalue = ti.GetValue(j, c);
+                            value = tempvalue;
+                        }
+                        catch (Exception ex)
+                        {
+                            this.statusmessage = "Error: Attempting to access non-existant entry (" + j + "," + c + ")";
+                            return null;
+                        }
+                        
                         if (cilist[c].DataType.ToLower() == "string")
                         {
+                            if (value == "")
+                            {
+                                // CDATA cannot be empty string or client will crash
+                                value = " ";
+                            }
                             xmlw.WriteStartElement(cilist[c].Name);
                             xmlw.WriteCData(value);
                             xmlw.WriteEndElement();

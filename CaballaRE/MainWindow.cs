@@ -260,7 +260,7 @@ namespace CaballaRE
             byte[] data = dl.ExportIdx();
             if (data == null)
             {
-                MessageBox.Show("Export to DAT file first to build IDX");
+                MessageBox.Show("Export to DAT first before building IDX");
                 return;
             }
             if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -281,7 +281,13 @@ namespace CaballaRE
             if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 BinaryWriter bw = new BinaryWriter(File.Create(sfd.FileName));
-                bw.Write(dl.ExportDAT(dl.ExportXML(), true));
+                byte[] data = dl.ExportXML();
+                if (data == null)
+                {
+                    MessageBox.Show("Failed to export. " + dl.GetStatus());
+                    return;
+                }
+                bw.Write(dl.ExportDAT(data, true));
                 bw.Flush();
                 bw.Close();
             }
@@ -295,7 +301,13 @@ namespace CaballaRE
             if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 BinaryWriter bw = new BinaryWriter(File.Create(sfd.FileName));
-                bw.Write(dl.ExportDAT(dl.ExportXML()));
+                byte[] data = dl.ExportXML();
+                if (data == null)
+                {
+                    MessageBox.Show("Failed to export. " + dl.GetStatus());
+                    return;
+                }
+                bw.Write(dl.ExportDAT(data));
                 bw.Flush();
                 bw.Close();
             }
@@ -309,7 +321,13 @@ namespace CaballaRE
             if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 BinaryWriter bw = new BinaryWriter(File.Create(sfd.FileName));
-                bw.Write(dl.ExportXML());
+                byte[] data = dl.ExportXML();
+                if (data == null)
+                {
+                    MessageBox.Show("Failed to export. " + dl.GetStatus());
+                    return;
+                }
+                bw.Write(data);
                 bw.Flush();
                 bw.Close();
             }

@@ -468,7 +468,7 @@
             this.iDXToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.contextMenuStrip1.Size = new System.Drawing.Size(231, 136);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(231, 114);
             // 
             // xLSExcelToolStripMenuItem
             // 
