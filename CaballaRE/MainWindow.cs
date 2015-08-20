@@ -291,10 +291,12 @@ namespace CaballaRE
                     MessageBox.Show("Failed to export. " + dl.GetStatus());
                     return;
                 }
-                bw.Write(dl.ExportDAT(data, true));
+                data = dl.ExportDAT(data, true);
+                bw.Write(data);
                 bw.Flush();
                 bw.Close();
             }
+            GC.Collect();
         }
 
         private void dATUnencryptedToolStripMenuItem_Click(object sender, EventArgs e)

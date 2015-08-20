@@ -27,12 +27,15 @@ namespace CaballaRE
         XTEAFunction encFunc = null;
         XTEAFunction decFunc = null;
 
-        public void Load(string src)
+        public DatLoader()
         {
             // Init reusable delegates
             encFunc = new XTEAFunction(this.Encrypt);
             decFunc = new XTEAFunction(this.Decrypt);
+        }
 
+        public void Load(string src)
+        {
             this.progress = 0;
             this.currentfile = null;
             BinaryReader b = new BinaryReader(File.Open(src, FileMode.Open));
@@ -232,8 +235,9 @@ namespace CaballaRE
         }
 
         delegate uint[] XTEAFunction(uint v0, uint v1, uint[] key);
+        byte[] memoryBuffer = new byte[8];
 
-        byte[] ProcessBlock(BinaryReader b, uint[] key, XTEAFunction xteaFunc)
+        byte[] ProcessBlock(BinaryReader b, uint[] key, XTEAFunction xteaFunc, bool reuseMemory)
         {
             // Data is in big-endian
             uint v0 = ToUInt(b.ReadBytes(4));
@@ -242,7 +246,10 @@ namespace CaballaRE
             uint[] result = xteaFunc(v0, v1, key);
 
             // Output is in big-endian
-            byte[] resultarr = new byte[8];
+            byte[] resultarr = memoryBuffer;
+            if (!reuseMemory) {
+                resultarr = new byte[8];
+            }
             resultarr[0] = (byte)((result[0] >> 24));
             resultarr[1] = (byte)((result[0] >> 16));
             resultarr[2] = (byte)((result[0] >> 8));
@@ -256,16 +263,16 @@ namespace CaballaRE
         }
 
         // Reads 8-byte block from file and encrypt it
-        byte[] EncryptBlock(BinaryReader b, uint[] key)
+        byte[] EncryptBlock(BinaryReader b, uint[] key, bool reusememory = false)
         {
             //return ProcessBlock(b, key, new XTEAFunction(this.Encrypt));
-            return ProcessBlock(b, key, this.encFunc);
+            return ProcessBlock(b, key, this.encFunc, reusememory);
         }
 
         // Reads 8-byte block from file and decrypt it
-        byte[] DecryptBlock(BinaryReader b, uint[] key)
+        byte[] DecryptBlock(BinaryReader b, uint[] key, bool reusememory = false)
         {
-            return ProcessBlock(b, key, this.decFunc);
+            return ProcessBlock(b, key, this.decFunc, reusememory);
             //return ProcessBlock(b, key, new XTEAFunction(this.Decrypt));
         }
 
@@ -766,13 +773,18 @@ namespace CaballaRE
             bw.Write((byte)1); // Write encryption flag
 
             // Encrypt file using XTEA
+            byte[] temp;
             while (b.BaseStream.Position < b.BaseStream.Length)
             {
-                byte[] temp = this.EncryptBlock(b, this.key_libconfig);
+                temp = this.EncryptBlock(b, this.key_libconfig, true);
                 bw.Write(temp);
             }
+            b.Close();
             bw.Flush();
-            return ms2.ToArray();
+            byte[] result = ms2.ToArray();
+            bw.Close();
+            ms2.Close();
+            return result;
         }
 
         // Given table name, find the the first occuring match

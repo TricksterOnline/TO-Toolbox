@@ -72,6 +72,13 @@ namespace CaballaRE
                 }
             }
 
+            if (numFiles == 0)
+            {
+                this.fileData = new List<byte[]>();
+                this.status = "This NRI has no images";
+                return true;
+            }
+
             int indicesHeader = b.ReadInt32();
             if (indicesHeader != 0)
             {
