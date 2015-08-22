@@ -270,10 +270,10 @@ namespace CaballaRE
             if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 BinaryWriter bw = new BinaryWriter(File.Create(sfd.FileName));
-                
                 bw.Write(data);
                 bw.Flush();
                 bw.Close();
+                MessageBox.Show("Export completed");
             }
         }
 
@@ -291,10 +291,13 @@ namespace CaballaRE
                     MessageBox.Show("Failed to export. " + dl.GetStatus());
                     return;
                 }
-                data = dl.ExportDAT(data, true);
+                data = dl.ExportDAT(data);
+                GC.Collect();
+                data = dl.EncryptFile(data);
                 bw.Write(data);
                 bw.Flush();
                 bw.Close();
+                MessageBox.Show("Export completed");
             }
             GC.Collect();
         }
@@ -316,6 +319,10 @@ namespace CaballaRE
                 bw.Write(dl.ExportDAT(data));
                 bw.Flush();
                 bw.Close();
+                if (data != null)
+                {
+                    MessageBox.Show("Export completed");
+                }
             }
         }
 
@@ -336,6 +343,11 @@ namespace CaballaRE
                 bw.Write(data);
                 bw.Flush();
                 bw.Close();
+                if (data != null)
+                {
+                    MessageBox.Show("Export completed");
+                }
+                
             }
         }
 
@@ -364,6 +376,10 @@ namespace CaballaRE
                 }
                 bw.Flush();
                 bw.Close();
+                if (data != null)
+                {
+                    MessageBox.Show("Export completed");
+                }
             }
         }
 

@@ -154,7 +154,7 @@ namespace CaballaRE
                     | block[blockoffset + 6] << 8
                     | block[blockoffset + 7]);
 
-                uint[] result = this.Decrypt(v0, v1, key);
+                uint[] result = this.Decrypt(v0, v1, key, false);
 
                 // Output is in big-endian
                 
@@ -234,16 +234,21 @@ namespace CaballaRE
             return r1;
         }
 
-        delegate uint[] XTEAFunction(uint v0, uint v1, uint[] key);
+        delegate uint[] XTEAFunction(uint v0, uint v1, uint[] key, bool reuseMemory);
         byte[] memoryBuffer = new byte[8];
+        byte[] intBuffer = new byte[4];
 
         byte[] ProcessBlock(BinaryReader b, uint[] key, XTEAFunction xteaFunc, bool reuseMemory)
         {
             // Data is in big-endian
-            uint v0 = ToUInt(b.ReadBytes(4));
-            uint v1 = ToUInt(b.ReadBytes(4));
+            //uint v0 = ToUInt(b.ReadBytes(4));
+            //uint v1 = ToUInt(b.ReadBytes(4));
+            b.Read(intBuffer, 0, 4);
+            uint v0 = ToUInt(intBuffer);
+            b.Read(intBuffer, 0, 4);
+            uint v1 = ToUInt(intBuffer);
 
-            uint[] result = xteaFunc(v0, v1, key);
+            uint[] result = xteaFunc(v0, v1, key, reuseMemory);
 
             // Output is in big-endian
             byte[] resultarr = memoryBuffer;
@@ -276,10 +281,12 @@ namespace CaballaRE
             //return ProcessBlock(b, key, new XTEAFunction(this.Decrypt));
         }
 
+        uint[] xteaBlock = new uint[2];
+        uint delta = 0x9e3779b9;
+
         // Regular XTEA
-        uint[] Encrypt(uint y, uint z, uint[] key)
+        uint[] Encrypt(uint y, uint z, uint[] key, bool reuseMemory)
         {
-            uint delta = 0x9e3779b9;
             uint n = 32;
             uint sum = 0;
 
@@ -290,13 +297,22 @@ namespace CaballaRE
                 z += (y << 4 ^ y >> 5) + y ^ sum + key[sum >> 11 & 3];
             }
 
-            return new uint[] { y, z };
+            if (reuseMemory)
+            {
+                xteaBlock[0] = y;
+                xteaBlock[1] = z;
+                return xteaBlock;
+            }
+            else
+            {
+                return new uint[] { y, z };
+            }
+            
         }
 
         // Regular XTEA
-        uint[] Decrypt(uint y, uint z, uint[] key)
+        uint[] Decrypt(uint y, uint z, uint[] key, bool reuseMemory)
         {
-            uint delta = 0x9e3779b9;
             uint n = 32;
             uint sum = delta << 5; // Equal to 0xc6ef3720
 
@@ -307,7 +323,16 @@ namespace CaballaRE
                 y -= (z << 4 ^ z >> 5) + z ^ sum + key[sum & 3];
             }
 
-            return new uint[] { y, z };
+            if (reuseMemory)
+            {
+                xteaBlock[0] = y;
+                xteaBlock[1] = z;
+                return xteaBlock;
+            }
+            else
+            {
+                return new uint[] { y, z };
+            }
         }
 
         /** LibConfig viewer **/
@@ -689,20 +714,23 @@ namespace CaballaRE
         List<uint> libconfigidxpointers = new List<uint>();
 
         // Export to padded XML file (each line on a block divisible by 8)
-        public byte[] ExportDAT(byte[] xmldata, bool encrypt = false)
+        public byte[] ExportDAT(byte[] xmldata)
         {
             libconfigidxpointers.Clear();
 
             MemoryStream msout = new MemoryStream();
             BinaryWriter binw = new BinaryWriter(msout);
 
-            MemoryStream ms = new MemoryStream();
-            ms.Write(xmldata, 0, xmldata.Length);
-            ms.Flush();
+            MemoryStream ms = new MemoryStream(xmldata);
+            //ms.Write(xmldata, 0, xmldata.Length);
+            //ms.Flush();
             ms.Position = 0;
             StreamReader txtr = new StreamReader(ms);
 
             uint pointer = 0; // Current file output pointer
+            int maxBlocks = 1; // Highest number of blocks used
+            byte[] buffer = new byte[maxBlocks * 8];
+            
             while (true)
             {
                 string line = txtr.ReadLine();
@@ -729,8 +757,14 @@ namespace CaballaRE
                 }
                 if (blocks > 0)
                 {
-                    byte[] buffer = new byte[blocks * 8];
-                    
+                    // Reuse buffer if possible
+                    if (maxBlocks < blocks)
+                    {
+                        maxBlocks = blocks;
+                        buffer = new byte[maxBlocks * 8];
+                    }
+                    int writeLen = blocks * 8;
+
                     // Copy
                     for (int i = 0; i < buffer.Length; i++)
                     {
@@ -743,28 +777,20 @@ namespace CaballaRE
                             buffer[i] = 0; // Fill with null
                         }
                     }
-                    binw.Write(buffer, 0, buffer.Length);
-                    pointer += (uint)buffer.Length;
+                    binw.Write(buffer, 0, writeLen);
+                    pointer += (uint)writeLen;
                 }
             }
             binw.Flush();
 
-            // Encryption (will also add 1-byte encryption flag)
-            if (encrypt)
-            {
-                return this.EncryptFile(msout.ToArray());
-            }
-            else
-            {
-                return msout.ToArray();
-            }
+            return msout.ToArray();
         }
 
         // Encrypt file (for export)
         public byte[] EncryptFile(byte[] data)
         {
-            MemoryStream ms = new MemoryStream(); // Input
-            ms.Write(data, 0, data.Length);
+            MemoryStream ms = new MemoryStream(data); // Input
+            //ms.Write(data, 0, data.Length);
             ms.Position = 0;
             BinaryReader b = new BinaryReader(ms);
 
