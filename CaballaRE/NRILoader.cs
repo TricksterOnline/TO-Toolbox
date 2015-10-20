@@ -64,7 +64,13 @@ namespace CaballaRE
                     b.ReadChars(24); // Skip
                     int PALlen = b.ReadInt32();
                     int colortablesize = PALlen - 32 - 8;
+                    int remainder = 0;
+
                     byte[] nricolortable = b.ReadBytes(colortablesize);
+                    if (remainder > 0)
+                    {
+                        b.ReadBytes(remainder);
+                    }
                     this.colortable = this.ProcessColorTable(nricolortable);
                     b.ReadInt32();
                     b.ReadInt32();
@@ -369,6 +375,22 @@ namespace CaballaRE
             if (this.colortable != null && this.pixelsize < 16)
             {
                 bw.Write(this.colortable);
+                // Pad color table
+                int colorTablePadSize = 1;
+                while (colorTablePadSize < bmpcolortablesize)
+                {
+                    colorTablePadSize *= 2;
+                    if (colorTablePadSize >= bmpcolortablesize)
+                    {
+                        break;
+                    }
+                }
+                int padAmount = colorTablePadSize - bmpcolortablesize;
+                if (padAmount > 0)
+                {
+                    byte[] padBuffer = new byte[padAmount];
+                    bw.Write(padBuffer);
+                }
             }
 
             // BMP image data (write in reverse order)
