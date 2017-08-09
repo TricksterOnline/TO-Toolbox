@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
-using Microsoft.VisualBasic.FileIO;
+using Microsoft.VisualBasic.FileIO; // For CSV reader
 
 namespace CaballaRE
 {
