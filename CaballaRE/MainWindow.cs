@@ -21,6 +21,7 @@ namespace CaballaRE
 
         private NRILoader nril = new NRILoader();
         private DatLoader dl = new DatLoader();
+		public string nriName = "";
 
         // Open NRI
         private void button1_Click(object sender, EventArgs e)
@@ -29,6 +30,9 @@ namespace CaballaRE
             ofd.Filter = "NRI files (*.nri;*.bac)|*.nri;*.bac|All files|*.*";
             if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
+				// Can use GetFileNameWithoutExtension, but .bac/.nri would be indifferentiable then
+				nriName = Path.GetFileName(ofd.FileName);
+
                 if (nril.Load(ofd.FileName))
                 {
                     if (nril.status != "")
@@ -523,13 +527,16 @@ namespace CaballaRE
                 FolderBrowserDialog sfd = new FolderBrowserDialog();
                 if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    string targetDir = sfd.SelectedPath;
+					string targetDir = sfd.SelectedPath + Path.DirectorySeparatorChar;
                     int files = nril.GetFileCount();
+					int numLength = files.ToString ().Length;
                     for (int i = 0; i < files; i++)
                     {
-                        string genFileName = targetDir + "\\img" + (i+1) + ".bmp";
+						i++;
+						string fileNum = i.ToString().PadLeft(numLength, '0');
+						string genFileName = targetDir + nriName + "_img" + fileNum + ".bmp";
                         MemoryStream bmpstream = nril.GetFile(i);
-                        BinaryWriter bw = new BinaryWriter(File.Create(genFileName));
+						BinaryWriter bw = new BinaryWriter(File.Create(genFileName));
                         bmpstream.Flush();
                         bw.Write(bmpstream.ToArray());
                         bw.Flush();
