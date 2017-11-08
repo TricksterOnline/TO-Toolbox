@@ -530,12 +530,11 @@ namespace CaballaRE
 					string targetDir = sfd.SelectedPath + Path.DirectorySeparatorChar;
                     int files = nril.GetFileCount();
 					int numLength = files.ToString ().Length;
-                    for (int i = 0; i < files; i++)
-                    {
-						i++;
+					for (int i = 1; i <=files; i++)
+					{
 						string fileNum = i.ToString().PadLeft(numLength, '0');
 						string genFileName = targetDir + nriName + "_img" + fileNum + ".bmp";
-                        MemoryStream bmpstream = nril.GetFile(i);
+                        MemoryStream bmpstream = nril.GetFile(i-1);
 						BinaryWriter bw = new BinaryWriter(File.Create(genFileName));
                         bmpstream.Flush();
                         bw.Write(bmpstream.ToArray());

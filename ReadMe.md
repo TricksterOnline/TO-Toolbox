@@ -10,4 +10,5 @@
 * NRI file extracting only works on *some* .nri files #wontfix (read below)
 
 
-* New app being written for .nri/.bac extraction, problems will be fixed there
+* A new [program](github.com/TricksterOnline/TNT) is being written for .nri/.bac
+  extraction, problems will be fixed there
