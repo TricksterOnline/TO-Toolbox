@@ -472,7 +472,7 @@ namespace CaballaRE
 
                 // Read animation offsets
                 List<int> offsets = new List<int>();
-                if (animationCount > 1) // Address list only present if more than 1 animation
+                if (animationCount >= 1) // Address list only present if more than 1 animation
                 {
                     int offsetsSize = animationCount * 4;
                     for (int i = 0; i < animationCount; i++)
